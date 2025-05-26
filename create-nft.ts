@@ -2,7 +2,7 @@ import { createNft, fetchDigitalAsset, mplTokenMetadata } from "@metaplex-founda
 import { airdropIfRequired, getExplorerLink, getKeypairFromFile } from "@solana-developers/helpers";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { clusterApiUrl, Connection, LAMPORTS_PER_SOL, sendAndConfirmTransaction } from "@solana/web3.js";
-import { generateSigner, keypairIdentity, percentAmount } from "@metaplex-foundation/umi";
+import { generateSigner, keypairIdentity, percentAmount,  publicKey} from "@metaplex-foundation/umi";
 
 //created connection to Solana Devnet.
 const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
@@ -30,27 +30,34 @@ umi.use(keypairIdentity(umiUser));
 
 console.log("Set up umi instance for user");
 
-const collectionMint = generateSigner(umi);
 
-const transaction = await createNft(umi , {
-    mint: collectionMint,
-    name: "My Nft Collection",
-    symbol: "MC",
-    uri: "https://raw.githubusercontent.com/HimakshP/create-nft-bootcamp/main/collection-metadata.json",
+const collectionAddress = publicKey("AjdeBijYQ4JcmGm9PZAHNrJPtNDn9LTPjqkk2vXEPHcx");
+
+console.log(`Creating Nft...`);
+
+
+const mint = generateSigner(umi);
+
+
+const transaction = await createNft(umi, {
+    mint,
+    name: "The Cigg",
+    uri: "https://raw.githubusercontent.com/HimakshP/create-nft-bootcamp/main/cigg-metadata.json",
     sellerFeeBasisPoints: percentAmount(0),
-    isCollection: true,
+    collection:{
+        key: collectionAddress,
+        verified: false,
+    },
 })
+
 await transaction.sendAndConfirm(umi);
 
-const createdCollectionNft = await fetchDigitalAsset(
-    umi,
-    collectionMint.publicKey
-);
-console.log(`Created the collection!! Adderess is ${getExplorerLink(
+const createdNft = await fetchDigitalAsset(umi, mint.publicKey);
+
+console.log(`Nft is created!! Address is ${getExplorerLink(
     "address",
-    createdCollectionNft.mint.publicKey, 
+    createdNft.mint.publicKey,
     "devnet"
+
 )}`
-)
-
-
+);
